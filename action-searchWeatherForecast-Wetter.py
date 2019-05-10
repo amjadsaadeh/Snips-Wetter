@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import ConfigParser
-from hermes_python.hermes import Hermes
+from hermes_python.hermes import Hermes, MqttOptions
+import toml
 from hermes_python.ontology import *
 import io
 import random  # for random answer forms
@@ -33,5 +34,14 @@ def subscribe_intent_callback(hermes, intentMessage):
 if __name__ == "__main__":
     conf = read_configuration_file(CONFIG_INI)
     weather = Weather(conf)
-    with Hermes("localhost:1883") as h:
+
+
+    config = toml.load('/etc/snips.toml')
+
+    broker_address = config['snips-common']['mqtt']
+    mqtt_username = config['snips-common']['mqtt_username']
+    mqtt_password = config['snips-common']['mqtt_password']
+
+    mqtt_opts = MqttOptions(username=mqtt_username, password=mqtt_password, broker_address=broker_address)
+    with Hermes(mqtt_options=mqtt_opts) as h:
         h.subscribe_intent("domi:searchWeatherForecast", subscribe_intent_callback).start()
